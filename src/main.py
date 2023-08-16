@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL, PEP_URL
+from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEP_URL
 from outputs import control_output
 from utils import find_tag, get_response
 
@@ -94,28 +94,56 @@ def download(session):
     logging.info(f'Архив был загружен и сохранен: {archive_path}')
 
 
+def get_pep_status(session, link):
+    response = get_response(session, link)
+    if response is None:
+        return
+    soup = BeautifulSoup(response.text, features='lxml')
+    status_element = None
+    for dt_tag in soup.find_all('dt'):
+        if dt_tag.get_text(strip=True) == 'Status:':
+            status_element = dt_tag
+    if status_element is not None:
+        return status_element.find_next_sibling('dd').text
+
+
 def pep(session):
     response = get_response(session, PEP_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, features='lxml')
-    results = [['Статус', 'Линк1', 'Номер PEP', 'Название PEP', 'Авторы PEP']]
+
     pep_tables = soup.find_all(
         'table',
         {'class': 'pep-zero-table docutils align-default'}
     )
-    count_pep = 0
-    for table in pep_tables:
+    result = [('Статус', 'Количество')]
+    pep_urls = dict()
+    for table in tqdm(pep_tables, desc='Таблицы с PEP'):
         table_rows = find_tag(table, 'tbody').find_all('tr')
 
         for row in table_rows:
-            preview_status = row.contents[0].text[1:]
-            link = urljoin(PEP_URL, row.contents[2].find('a')['href'])
-            count_pep += 1
-            print(count_pep, preview_status, link)
-            # break
-
-
+            statuses = dict()
+            preview_status = EXPECTED_STATUS.get(row.contents[0].text[1:], '')
+            url = urljoin(PEP_URL, row.contents[2].find('a')['href'])
+            pep_status = get_pep_status(session, url)
+            if pep_status not in preview_status:
+                logging.info('Несовпадающий статус:')
+                logging.info(url)
+                logging.info(f'Статус в карточке: {pep_status}')
+                logging.info(f'Ожидаемые статусы: {preview_status}')
+            if url not in pep_urls:
+                pep_urls[url] = {'status': pep_status, 'amount': 1}
+            else:
+                pep_urls[url]['status'] = pep_status
+    for value in pep_urls.values():
+        if value['status'] not in statuses:
+            statuses[value['status']] = 1
+        else:
+            statuses[value['status']] += 1
+    result.extend((status, amount) for status, amount in statuses.items())
+    result.append(('Total', len(pep_urls)))
+    return result
 
 
 MODE_TO_FUNCTION = {
