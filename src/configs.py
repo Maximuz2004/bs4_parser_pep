@@ -6,26 +6,30 @@ from constants import BASE_DIR
 
 LOG_FORMAT = '"%(asctime)s - [%(levelname)s] - %(message)s"'
 DT_FORMAT = '%d.%m.%Y %H:%M:%S'
+PARSER_INFO = 'Парсер документации Python'
+PARSER_HELP_MESSAGE = 'Режимы работы парсера'
+CACHE_CLEAN_HELP_MESSAGE = 'Очистка кеша'
+OUTPUT_HELP_MESSAGE = 'Дополнительные способы вывода данных'
 
 
 def configure_argument_parser(available_modes):
-    parser = argparse.ArgumentParser(description='Парсер документации Python')
+    parser = argparse.ArgumentParser(description=PARSER_INFO)
     parser.add_argument(
         'mode',
         choices=available_modes,
-        help='Режимы работы парсера'
+        help=PARSER_HELP_MESSAGE
     )
     parser.add_argument(
         '-c',
         '--clear-cache',
         action='store_true',
-        help='Очистка кеша'
+        help=CACHE_CLEAN_HELP_MESSAGE
     )
     parser.add_argument(
         '-o',
         '--output',
         choices=('pretty', 'file'),
-        help='Дополнительные способы вывода данных'
+        help=OUTPUT_HELP_MESSAGE
     )
     return parser
 

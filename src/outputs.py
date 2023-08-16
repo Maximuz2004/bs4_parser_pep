@@ -2,11 +2,9 @@ import csv
 import datetime as dt
 import logging
 
-
 from prettytable import PrettyTable
 
-
-from constants import BASE_DIR, DATETIME_FORMAT
+from constants import BASE_DIR, DATETIME_FORMAT, FILE_SAVED_MESSAGE
 
 
 def control_output(results, cli_args):
@@ -21,7 +19,7 @@ def control_output(results, cli_args):
 
 def default_output(results):
     for row in results:
-        print(row)
+        print(*row)
 
 
 def pretty_output(results):
@@ -35,12 +33,10 @@ def pretty_output(results):
 def file_output(results, cli_args):
     results_dir = BASE_DIR / 'results'
     results_dir.mkdir(exist_ok=True)
-    parser_mode = cli_args.mode
-    now = dt.datetime.now()
-    now_formatted = now.strftime(DATETIME_FORMAT)
-    file_name = f'{parser_mode}_{now_formatted}.csv'
-    file_path = results_dir / file_name
+    file_path = (results_dir /
+                 f'{cli_args.mode}_'
+                 f'{dt.datetime.now().strftime(DATETIME_FORMAT)}.csv')
     with open(file_path, 'w', encoding='utf-8') as f:
         writer = csv.writer(f, dialect='unix')
         writer.writerows(results)
-    logging.info(f'Файл с результатами был сохранен: {file_path}')
+    logging.info(FILE_SAVED_MESSAGE.format(file_path))
