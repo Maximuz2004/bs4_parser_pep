@@ -1,8 +1,17 @@
 # Парсер PEP с использованием Beautiful Soup
 
+
 Этот проект представляет собой скрипт на языке Python, использующий библиотеку 
 Beautiful Soup для парсинга Python Enhancement Proposals (PEP) с веб-сайта 
 Python и извлечения информации о них.
+
+**Стек технологий:**
+- [argparse](https://docs.python.org/3/library/argparse.html),
+- [logging](https://docs.python.org/3/library/logging.html),
+- [regular expression](https://docs.python.org/3.9/library/re.html),
+- [requests_cache](https://requests-cache.readthedocs.io/en/stable/),
+- [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/),
+- [prettytable](https://ptable.readthedocs.io/en/latest/tutorial.html)
 
 ## Установка
 
@@ -45,4 +54,4 @@ Python и извлечения информации о них.
 ```
 
 
-По всем вопросам обращайтесь к [Maximuz2004](https://github.com/Maximuz2004).
+По всем вопросам обращайтесь к [Титову Максиму](https://github.com/Maximuz2004).

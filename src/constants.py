@@ -14,13 +14,11 @@ EXPECTED_STATUS = {
     'W': ('Withdrawn',),
     '': ('Draft', 'Active'),
 }
-MISMATCHED_STATUS = ("Несовпадающий статус:\n"
-                     "{}\n"
-                     "Статус в карточке: {}\n"
-                     "Ожидаемые статусы: {}")
-NOTHING_FIND_MESSAGE = 'Ничего не нашлось'
-ARCHIVE_UPLOADED_MESSAGE = 'Архив был загружен и сохранен: {}'
-PARSER_LAUNCHED_MESSAGE = 'Парсер запущен!'
-COMMAND_LINE_ARGUMENTS = 'Аргументы коммандной строки: {}'
-FINISH_WORK_MESSAGE = 'Парсер завершил работу'
-FILE_SAVED_MESSAGE = 'Файл с результатами был сохранен: {}'
+
+LOG_DIR = 'logs'
+LOG_FILE = 'parser.log'
+DOWNLOAD_DIR = 'downloads'
+RESULT_DIR = 'results'
+
+PRETTY_MODE = 'pretty'
+FILE_MODE = 'file'

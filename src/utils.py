@@ -1,5 +1,3 @@
-import logging
-
 from bs4 import BeautifulSoup
 from requests import RequestException
 
@@ -9,28 +7,21 @@ REQUEST_ERROR_MESSAGE = 'Возникла ошибка при загрузке �
 TAG_ERROR_MESSAGE = 'Не найден тег {} {}'
 
 
-def get_response(session, url):
+def get_response(session, url, encoding='utf-8'):
     try:
         response = session.get(url)
-        response.encoding = 'utf-8'
+        response.encoding = encoding
         return response
     except RequestException:
-        logging.exception(
-            REQUEST_ERROR_MESSAGE.format(url),
-            stack_info=True
-        )
+        raise RequestException(REQUEST_ERROR_MESSAGE.format(url))
 
 
-def get_soup(response):
-    if response is None:
-        return
-    return BeautifulSoup(response.text, features='lxml')
+def get_soup(session, url, features='lxml'):
+    return BeautifulSoup(get_response(session, url).text, features=features)
 
 
 def find_tag(soup, tag, attrs=None):
-    searched_tag = soup.find(tag, attrs=(attrs or {}))
+    searched_tag = soup.find(tag, attrs=attrs if attrs is not None else {})
     if searched_tag is None:
-        error_msg = TAG_ERROR_MESSAGE.format(tag, attrs)
-        logging.error(error_msg, stack_info=True)
-        raise ParserFindTagException(error_msg)
+        raise ParserFindTagException(TAG_ERROR_MESSAGE.format(tag, attrs))
     return searched_tag
