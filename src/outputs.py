@@ -28,11 +28,15 @@ def file_output(results, cli_args):
     results_dir = BASE_DIR / RESULT_DIR
     results_dir.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
-    now = dt.datetime.now()
-    now_formatted = now.strftime(DATETIME_FORMAT)
+    now_formatted = dt.datetime.now().strftime(DATETIME_FORMAT)
     file_path = results_dir / f'{parser_mode}_{now_formatted}.csv'
     with open(file_path, 'w', encoding='utf-8') as f:
-        csv.writer(f, dialect=csv.unix_dialect).writerows(results)
+        csv.writer(
+            f,
+            dialect=csv.unix_dialect
+        ).writerows(
+            results
+        )
     logging.info(FILE_SAVED_MESSAGE.format(file_path))
 
 

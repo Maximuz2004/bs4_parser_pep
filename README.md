@@ -6,7 +6,7 @@ Beautiful Soup для парсинга Python Enhancement Proposals (PEP) с в�
 Python и извлечения информации о них.
 
 **Стек технологий:**
-- [Python 3.11](https://docs.python.org/3/),
+- [Python 3.9+](https://docs.python.org/3/),
 - [requests_cache](https://requests-cache.readthedocs.io/en/stable/),
 - [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/),
 - [prettytable](https://ptable.readthedocs.io/en/latest/tutorial.html)
@@ -16,15 +16,18 @@ Python и извлечения информации о них.
 1. Клонируйте репозиторий:
    ```sh
    git clone https://github.com/Maximuz2004/bs4_parser_pep.git
+   ```
 
 2. Перейдите в папку проекта:
 
-    ```sh
+   ```sh
     cd bs4_parser_pep
+   ```
 3. Установите необходимые зависимости:
 
-    ```sh
+   ```sh
     pip install -r requirements.txt
+   ```
 
 ## Использование
 Запустите скрипт ```main.py --help```, чтобы узнать режимы работы и возможности
@@ -52,4 +55,4 @@ Python и извлечения информации о них.
 ```
 
 
-По всем вопросам обращайтесь к [Титов Максим](https://github.com/Maximuz2004).
+Автор: [Титов Максим](https://github.com/Maximuz2004)

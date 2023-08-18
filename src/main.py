@@ -24,23 +24,28 @@ MISMATCHED_STATUS = ("Несовпадающий статус:\n"
                      "{}\n"
                      "Статус в карточке: {}\n"
                      "Ожидаемые статусы: {}")
+NO_PEP_STATUS = 'Не удалось получить статус для URL: {}'
 COMMAND_LINE_ARGUMENTS = 'Аргументы командной строки: {}'
 WHATS_NEW_TITLE = ('Ссылка на статью', 'Заголовок', 'Редактор, Автор')
 PEP_TITLE = ('Статус', 'Количество')
+TOTAL_NAME = 'Всего'
 WHATS_NEW_LINK = 'whatsnew/'
 
 
 def whats_new(session):
     whats_new_url = urljoin(MAIN_DOC_URL, WHATS_NEW_LINK)
-    sections_by_python = get_soup(
-        session, whats_new_url
-    ).select('#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a')
     results = [WHATS_NEW_TITLE]
     log_messages = []
-    for section in tqdm(sections_by_python):
+    for a_tag in tqdm(
+            get_soup(
+                session, whats_new_url
+            ).select(
+                '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a'
+            )
+    ):
         version_link = urljoin(
             whats_new_url,
-            section['href']
+            a_tag['href']
         )
         try:
             soup = get_soup(session, version_link)
@@ -58,8 +63,11 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    for ul in get_soup(session, MAIN_DOC_URL).select(
-            'div.sphinxsidebarwrapper ul'):
+    for ul in get_soup(
+            session, MAIN_DOC_URL
+    ).select(
+        'div.sphinxsidebarwrapper ul'
+    ):
         if 'All versions' in ul.text:
             a_tags = ul.find_all('a')
             break
@@ -99,39 +107,38 @@ def pep(session):
         try:
             soup = get_soup(session, link)
         except ConnectionError as error:
-            log_messages.append(ERROR_MESSAGE.format(error))
-        status_element = None
-        for dt_tag in soup.find_all('dt'):
-            if dt_tag.get_text(strip=True) == 'Status:':
-                status_element = dt_tag
-                break
-        return status_element.find_next_sibling(
-            'dd').text if status_element is not None else None
+            raise ConnectionError(ERROR_MESSAGE.format(error))
+        status_element = soup.select_one('dt:-soup-contains("Status:")')
+        return (status_element.find_next_sibling('dd').get_text(strip=True)
+                if status_element is not None else None)
 
-    soup = get_soup(session, PEP_URL)
     pep_statuses = defaultdict(int)
     pep_urls = set()
     log_messages = []
-    for table in tqdm(
-            soup.select('table.pep-zero-table.docutils.align-default'),
-            desc='Таблицы с PEP'
+    for row in tqdm(
+        get_soup(session, PEP_URL).select(
+            'table.pep-zero-table.docutils.align-default tbody tr'),
+        desc='Строки с PEP'
     ):
-        for row in find_tag(table, 'tbody').find_all('tr'):
-            preview_status = EXPECTED_STATUS.get(row.contents[0].text[1:], '')
-            url = urljoin(PEP_URL, row.contents[2].find('a')['href'])
+        preview_status = EXPECTED_STATUS.get(row.contents[0].text[1:], '')
+        url = urljoin(PEP_URL, row.contents[2].find('a')['href'])
+        try:
             pep_status = get_pep_status(url)
-            if pep_status not in preview_status:
-                log_messages.append(MISMATCHED_STATUS.format(
-                    url, pep_status, preview_status
-                ))
-            if url not in pep_urls:
-                pep_statuses[pep_status] += 1
-                pep_urls.add(url)
+        except ConnectionError:
+            log_messages.append(NO_PEP_STATUS.format(url))
+            continue
+        if pep_status not in preview_status:
+            log_messages.append(MISMATCHED_STATUS.format(
+                url, pep_status, preview_status
+            ))
+        if url not in pep_urls:
+            pep_statuses[pep_status] += 1
+            pep_urls.add(url)
     list(map(logging.error, log_messages))
     return [
         PEP_TITLE,
         *pep_statuses.items(),
-        ('Всего', sum(pep_statuses.values()))
+        (TOTAL_NAME, sum(pep_statuses.values()))
     ]
 
 
