@@ -6,7 +6,6 @@ import re
 from tqdm import tqdm
 import requests_cache
 
-
 from configs import configure_argument_parser, configure_logging
 from constants import (BASE_DIR, DOWNLOAD_DIR, EXPECTED_STATUS, MAIN_DOC_URL,
                        PEP_URL)
@@ -27,6 +26,7 @@ MISMATCHED_STATUS = ("Несовпадающий статус:\n"
                      "Ожидаемые статусы: {}")
 COMMAND_LINE_ARGUMENTS = 'Аргументы командной строки: {}'
 WHATS_NEW_TITLE = ('Ссылка на статью', 'Заголовок', 'Редактор, Автор')
+PEP_TITLE = ('Статус', 'Количество')
 WHATS_NEW_LINK = 'whatsnew/'
 
 
@@ -104,18 +104,18 @@ def pep(session):
         for dt_tag in soup.find_all('dt'):
             if dt_tag.get_text(strip=True) == 'Status:':
                 status_element = dt_tag
-        if status_element is not None:
-            return status_element.find_next_sibling('dd').text
+                break
+        return status_element.find_next_sibling(
+            'dd').text if status_element is not None else None
 
     soup = get_soup(session, PEP_URL)
-    pep_tables = soup.find_all(
-        'table',
-        {'class': 'pep-zero-table docutils align-default'}
-    )
     pep_statuses = defaultdict(int)
     pep_urls = set()
     log_messages = []
-    for table in tqdm(pep_tables, desc='Таблицы с PEP'):
+    for table in tqdm(
+            soup.select('table.pep-zero-table.docutils.align-default'),
+            desc='Таблицы с PEP'
+    ):
         for row in find_tag(table, 'tbody').find_all('tr'):
             preview_status = EXPECTED_STATUS.get(row.contents[0].text[1:], '')
             url = urljoin(PEP_URL, row.contents[2].find('a')['href'])
@@ -129,7 +129,7 @@ def pep(session):
                 pep_urls.add(url)
     list(map(logging.error, log_messages))
     return [
-        ('Статус', 'Количество'),
+        PEP_TITLE,
         *pep_statuses.items(),
         ('Всего', sum(pep_statuses.values()))
     ]
