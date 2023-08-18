@@ -1,10 +1,11 @@
 from collections import defaultdict
+from urllib.parse import urljoin
 import logging
 import re
-from urllib.parse import urljoin
 
-import requests_cache
 from tqdm import tqdm
+import requests_cache
+
 
 from configs import configure_argument_parser, configure_logging
 from constants import (BASE_DIR, DOWNLOAD_DIR, EXPECTED_STATUS, MAIN_DOC_URL,
@@ -25,20 +26,21 @@ MISMATCHED_STATUS = ("Несовпадающий статус:\n"
                      "Статус в карточке: {}\n"
                      "Ожидаемые статусы: {}")
 COMMAND_LINE_ARGUMENTS = 'Аргументы командной строки: {}'
+WHATS_NEW_TITLE = ('Ссылка на статью', 'Заголовок', 'Редактор, Автор')
+WHATS_NEW_LINK = 'whatsnew/'
 
 
 def whats_new(session):
-    whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
-    soup = get_soup(session, whats_new_url)
-    sections_by_python = soup.select(
-        '#what-s-new-in-python div.toctree-wrapper li.toctree-l1'
-    )
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор')]
+    whats_new_url = urljoin(MAIN_DOC_URL, WHATS_NEW_LINK)
+    sections_by_python = get_soup(
+        session, whats_new_url
+    ).select('#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a')
+    results = [WHATS_NEW_TITLE]
     log_messages = []
     for section in tqdm(sections_by_python):
         version_link = urljoin(
             whats_new_url,
-            find_tag(section, 'a')['href']
+            section['href']
         )
         try:
             soup = get_soup(session, version_link)
@@ -56,11 +58,8 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    soup = get_soup(session, MAIN_DOC_URL)
-    ul_tags = find_tag(
-        soup, 'div', attrs={'class': 'sphinxsidebarwrapper'}
-    ).find_all('ul')
-    for ul in ul_tags:
+    for ul in get_soup(session, MAIN_DOC_URL).select(
+            'div.sphinxsidebarwrapper ul'):
         if 'All versions' in ul.text:
             a_tags = ul.find_all('a')
             break
@@ -97,14 +96,16 @@ def download(session):
 
 def pep(session):
     def get_pep_status(link):
-        soup = get_soup(session, link)
-        if soup is not None:
-            status_element = None
-            for dt_tag in soup.find_all('dt'):
-                if dt_tag.get_text(strip=True) == 'Status:':
-                    status_element = dt_tag
-            if status_element is not None:
-                return status_element.find_next_sibling('dd').text
+        try:
+            soup = get_soup(session, link)
+        except ConnectionError as error:
+            log_messages.append(ERROR_MESSAGE.format(error))
+        status_element = None
+        for dt_tag in soup.find_all('dt'):
+            if dt_tag.get_text(strip=True) == 'Status:':
+                status_element = dt_tag
+        if status_element is not None:
+            return status_element.find_next_sibling('dd').text
 
     soup = get_soup(session, PEP_URL)
     pep_tables = soup.find_all(

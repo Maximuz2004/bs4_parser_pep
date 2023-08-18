@@ -6,9 +6,7 @@ Beautiful Soup для парсинга Python Enhancement Proposals (PEP) с в�
 Python и извлечения информации о них.
 
 **Стек технологий:**
-- [argparse](https://docs.python.org/3/library/argparse.html),
-- [logging](https://docs.python.org/3/library/logging.html),
-- [regular expression](https://docs.python.org/3.9/library/re.html),
+- [Python 3.11](https://docs.python.org/3/),
 - [requests_cache](https://requests-cache.readthedocs.io/en/stable/),
 - [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/),
 - [prettytable](https://ptable.readthedocs.io/en/latest/tutorial.html)
@@ -54,4 +52,4 @@ Python и извлечения информации о них.
 ```
 
 
-По всем вопросам обращайтесь к [Титову Максиму](https://github.com/Maximuz2004).
+По всем вопросам обращайтесь к [Титов Максим](https://github.com/Maximuz2004).

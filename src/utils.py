@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
-from requests import RequestException
 
 from exceptions import ParserFindTagException
 
-REQUEST_ERROR_MESSAGE = 'Возникла ошибка при загрузке страницы {}'
+REQUEST_ERROR_MESSAGE = 'Возникла ошибка {} при загрузке страницы {}'
 TAG_ERROR_MESSAGE = 'Не найден тег {} {}'
 
 
@@ -12,8 +11,8 @@ def get_response(session, url, encoding='utf-8'):
         response = session.get(url)
         response.encoding = encoding
         return response
-    except RequestException:
-        raise RequestException(REQUEST_ERROR_MESSAGE.format(url))
+    except Exception as error:
+        raise ConnectionError(REQUEST_ERROR_MESSAGE.format(error, url))
 
 
 def get_soup(session, url, features='lxml'):
