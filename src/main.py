@@ -24,7 +24,7 @@ MISMATCHED_STATUS = ("Несовпадающий статус:\n"
                      "{}\n"
                      "Статус в карточке: {}\n"
                      "Ожидаемые статусы: {}")
-NO_PEP_STATUS = 'Не удалось получить статус для URL: {}'
+NO_PEP_STATUS = 'Не удалось получить статус для URL: {}. Ошибка: {}'
 COMMAND_LINE_ARGUMENTS = 'Аргументы командной строки: {}'
 WHATS_NEW_TITLE = ('Ссылка на статью', 'Заголовок', 'Редактор, Автор')
 PEP_TITLE = ('Статус', 'Количество')
@@ -37,11 +37,11 @@ def whats_new(session):
     results = [WHATS_NEW_TITLE]
     log_messages = []
     for a_tag in tqdm(
-            get_soup(
-                session, whats_new_url
-            ).select(
-                '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a'
-            )
+        get_soup(
+            session, whats_new_url
+        ).select(
+            '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a'
+        )
     ):
         version_link = urljoin(
             whats_new_url,
@@ -64,7 +64,7 @@ def whats_new(session):
 
 def latest_versions(session):
     for ul in get_soup(
-            session, MAIN_DOC_URL
+        session, MAIN_DOC_URL
     ).select(
         'div.sphinxsidebarwrapper ul'
     ):
@@ -104,10 +104,7 @@ def download(session):
 
 def pep(session):
     def get_pep_status(link):
-        try:
-            soup = get_soup(session, link)
-        except ConnectionError as error:
-            raise ConnectionError(ERROR_MESSAGE.format(error))
+        soup = get_soup(session, link)
         status_element = soup.select_one('dt:-soup-contains("Status:")')
         return (status_element.find_next_sibling('dd').get_text(strip=True)
                 if status_element is not None else None)
@@ -124,8 +121,8 @@ def pep(session):
         url = urljoin(PEP_URL, row.contents[2].find('a')['href'])
         try:
             pep_status = get_pep_status(url)
-        except ConnectionError:
-            log_messages.append(NO_PEP_STATUS.format(url))
+        except ConnectionError as error:
+            log_messages.append(NO_PEP_STATUS.format(url, error))
             continue
         if pep_status not in preview_status:
             log_messages.append(MISMATCHED_STATUS.format(
